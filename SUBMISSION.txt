@@ -1,0 +1,91 @@
+EXPENSE TRACKER - SPRINT 1 SUBMISSION
+=====================================
+
+Student Name: [Your Name]
+Course: [Your Course Code]
+Sprint: 1 (Backend - Weeks 2-4)
+Due Date: Week 4 Dev Day
+
+GitHub Repository URL:
+----------------------
+[PASTE YOUR GITHUB REPO URL HERE]
+
+Example: https://github.com/yourusername/expense-tracker-backend
+
+
+Project Structure Completed:
+-----------------------------
+✅ Node.js + Express server setup
+✅ MySQL database schema with 3 tables (Users, Expenses, Categories)
+✅ User authentication (signup/login) with JWT
+✅ Protected middleware for secure routes
+✅ CRUD operations for Users
+✅ CRUD operations for Expenses
+✅ CRUD operations for Categories
+✅ Environment configuration with .env
+✅ Comprehensive README documentation
+✅ API testing documentation
+
+
+API Endpoints Implemented:
+---------------------------
+Auth Routes:
+- POST /api/auth/signup
+- POST /api/auth/login
+
+User Routes (Protected):
+- GET /api/users/me
+- PUT /api/users/me
+- DELETE /api/users/me
+
+Expense Routes (Protected):
+- GET /api/expenses
+- POST /api/expenses
+- GET /api/expenses/:id
+- PUT /api/expenses/:id
+- DELETE /api/expenses/:id
+
+Category Routes (Protected):
+- GET /api/categories
+- POST /api/categories
+- PUT /api/categories/:id
+- DELETE /api/categories/:id
+
+
+Live Demo Checklist:
+--------------------
+✅ Code pushed to GitHub
+✅ Database created and schema applied
+✅ .env file configured
+✅ Server runs without errors
+✅ Can demonstrate signup/login
+✅ Can demonstrate creating categories
+✅ Can demonstrate creating expenses
+✅ Can demonstrate viewing expenses
+
+
+Technical Questions Prepared For:
+----------------------------------
+1. "Show me where you defined your routes"
+   - Location: /routes/ directory (auth.js, users.js, expenses.js, categories.js)
+
+2. "How does your authentication work?"
+   - JWT tokens generated on signup/login
+   - Protected middleware validates token on protected routes
+   - Location: /middleware/auth.js
+
+3. "Show me your database schema"
+   - Location: /database/schema.sql
+   - 3 tables: users, expenses, categories with proper relationships
+
+4. "How do you protect routes?"
+   - authMiddleware function checks for valid JWT token
+   - Applied to all routes except signup/login
+
+
+Notes:
+------
+[Add any additional notes or special instructions here]
+
+
+Submission Date: [Date]
