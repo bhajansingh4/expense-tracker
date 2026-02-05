@@ -275,7 +275,7 @@ mysql -u root -p expense_tracker
 
 ## Author
 
-[Your Name]
+Bhajan Singh 
 
 ## License
 

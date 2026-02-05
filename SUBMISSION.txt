@@ -1,16 +1,14 @@
 EXPENSE TRACKER - SPRINT 1 SUBMISSION
 =====================================
 
-Student Name: [Your Name]
-Course: [Your Course Code]
+Student Name: Bhajan Singh
+Course: OpenSource Full Stack Development
 Sprint: 1 (Backend - Weeks 2-4)
 Due Date: Week 4 Dev Day
 
 GitHub Repository URL:
 ----------------------
-[PASTE YOUR GITHUB REPO URL HERE]
-
-Example: https://github.com/yourusername/expense-tracker-backend
+https://github.com/bhajansingh4/expense-tracker
 
 
 Project Structure Completed:
@@ -83,9 +81,3 @@ Technical Questions Prepared For:
    - Applied to all routes except signup/login
 
 
-Notes:
-------
-[Add any additional notes or special instructions here]
-
-
-Submission Date: [Date]
