@@ -45,6 +45,9 @@ INSERT INTO users (id, name, email, password_hash) VALUES
 (3, 'Bob Johnson', 'bob@example.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcg7b3XeKeUxWdeS86E36P4/1Pq')
 ON CONFLICT (email) DO NOTHING;
 
+-- Reset sequence for users
+SELECT setval('users_id_seq', (SELECT MAX(id) FROM users) + 1);
+
 -- Insert sample categories
 INSERT INTO categories (id, user_id, name) VALUES 
 (1, 1, 'Food'),
@@ -56,6 +59,9 @@ INSERT INTO categories (id, user_id, name) VALUES
 (7, 3, 'Shopping'),
 (8, 3, 'Bills')
 ON CONFLICT DO NOTHING;
+
+-- Reset sequence for categories
+SELECT setval('categories_id_seq', (SELECT MAX(id) FROM categories) + 1);
 
 -- Insert sample expenses
 INSERT INTO expenses (id, user_id, category_id, amount, description, date) VALUES 
@@ -69,3 +75,6 @@ INSERT INTO expenses (id, user_id, category_id, amount, description, date) VALUE
 (8, 3, 7, 250.00, 'Clothes shopping', '2026-02-03'),
 (9, 3, 8, 150.00, 'Internet bill', '2026-02-04')
 ON CONFLICT DO NOTHING;
+
+-- Reset sequence for expenses
+SELECT setval('expenses_id_seq', (SELECT MAX(id) FROM expenses) + 1);
