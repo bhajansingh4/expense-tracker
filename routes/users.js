@@ -6,16 +6,16 @@ const authMiddleware = require('../middleware/auth');
 // GET /api/users/me - Get current user profile
 router.get('/me', authMiddleware, async (req, res) => {
   try {
-    const [users] = await db.query(
-      'SELECT id, name, email, created_at FROM users WHERE id = ?',
+    const users = await db.query(
+      'SELECT id, name, email, created_at FROM users WHERE id = $1',
       [req.user.userId]
     );
 
-    if (users.length === 0) {
+    if (users.rows.length === 0) {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    res.json({ user: users[0] });
+    res.json({ user: users.rows[0] });
   } catch (error) {
     console.error('Get user error:', error);
     res.status(500).json({ message: 'Server error' });
@@ -33,29 +33,32 @@ router.put('/me', authMiddleware, async (req, res) => {
 
     let updateQuery = 'UPDATE users SET ';
     const updateValues = [];
+    let paramCount = 1;
 
     if (name) {
-      updateQuery += 'name = ?';
+      updateQuery += `name = $${paramCount}`;
       updateValues.push(name);
+      paramCount++;
     }
 
     if (email) {
       if (name) updateQuery += ', ';
-      updateQuery += 'email = ?';
+      updateQuery += `email = $${paramCount}`;
       updateValues.push(email);
+      paramCount++;
     }
 
-    updateQuery += ' WHERE id = ?';
+    updateQuery += ` WHERE id = $${paramCount}`;
     updateValues.push(req.user.userId);
 
     await db.query(updateQuery, updateValues);
 
-    const [users] = await db.query(
-      'SELECT id, name, email, created_at FROM users WHERE id = ?',
+    const users = await db.query(
+      'SELECT id, name, email, created_at FROM users WHERE id = $1',
       [req.user.userId]
     );
 
-    res.json({ message: 'Profile updated successfully', user: users[0] });
+    res.json({ message: 'Profile updated successfully', user: users.rows[0] });
   } catch (error) {
     console.error('Update user error:', error);
     res.status(500).json({ message: 'Server error' });
@@ -65,7 +68,7 @@ router.put('/me', authMiddleware, async (req, res) => {
 // DELETE /api/users/me - Delete user account
 router.delete('/me', authMiddleware, async (req, res) => {
   try {
-    await db.query('DELETE FROM users WHERE id = ?', [req.user.userId]);
+    await db.query('DELETE FROM users WHERE id = $1', [req.user.userId]);
     res.json({ message: 'Account deleted successfully' });
   } catch (error) {
     console.error('Delete user error:', error);

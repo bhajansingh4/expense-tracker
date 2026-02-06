@@ -15,9 +15,9 @@ router.post('/signup', async (req, res) => {
     }
 
     // Check if user already exists
-    const [existingUsers] = await db.query('SELECT * FROM users WHERE email = ?', [email]);
+    const existingUsers = await db.query('SELECT * FROM users WHERE email = $1', [email]);
     
-    if (existingUsers.length > 0) {
+    if (existingUsers.rows.length > 0) {
       return res.status(400).json({ message: 'User already exists with this email' });
     }
 
@@ -26,14 +26,16 @@ router.post('/signup', async (req, res) => {
     const passwordHash = await bcrypt.hash(password, salt);
 
     // Insert user into database
-    const [result] = await db.query(
-      'INSERT INTO users (name, email, password_hash) VALUES (?, ?, ?)',
+    const result = await db.query(
+      'INSERT INTO users (name, email, password_hash) VALUES ($1, $2, $3) RETURNING id',
       [name, email, passwordHash]
     );
 
+    const userId = result.rows[0].id;
+
     // Create JWT token
     const token = jwt.sign(
-      { userId: result.insertId, email },
+      { userId, email },
       process.env.JWT_SECRET,
       { expiresIn: '24h' }
     );
@@ -42,7 +44,7 @@ router.post('/signup', async (req, res) => {
       message: 'User created successfully',
       token,
       user: {
-        id: result.insertId,
+        id: userId,
         name,
         email
       }
@@ -64,13 +66,13 @@ router.post('/login', async (req, res) => {
     }
 
     // Find user
-    const [users] = await db.query('SELECT * FROM users WHERE email = ?', [email]);
+    const users = await db.query('SELECT * FROM users WHERE email = $1', [email]);
 
-    if (users.length === 0) {
+    if (users.rows.length === 0) {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
-    const user = users[0];
+    const user = users.rows[0];
 
     // Check password
     const isMatch = await bcrypt.compare(password, user.password_hash);

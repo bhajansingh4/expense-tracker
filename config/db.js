@@ -1,18 +1,19 @@
-const mysql = require('mysql2');
+const { Pool } = require('pg');
 require('dotenv').config();
 
-// Create connection pool
-const pool = mysql.createPool({
+// Create connection pool with SSL
+const pool = new Pool({
   host: process.env.DB_HOST,
+  port: process.env.DB_PORT,
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0
+  max: 20,
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 2000,
+  ssl: {
+    rejectUnauthorized: false
+  }
 });
 
-// Get promise-based connection
-const promisePool = pool.promise();
-
-module.exports = promisePool;
+module.exports = pool;
