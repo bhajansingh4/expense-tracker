@@ -16,8 +16,8 @@ router.get('/', async (req, res) => {
 
     res.json({ categories: categories.rows });
   } catch (error) {
-    console.error('Get categories error:', error);
-    res.status(500).json({ message: 'Server error' });
+    console.error('Get categories error:', error.message, error);
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
 
@@ -57,8 +57,8 @@ router.post('/', async (req, res) => {
       category: categories.rows[0]
     });
   } catch (error) {
-    console.error('Create category error:', error);
-    res.status(500).json({ message: 'Server error' });
+    console.error('Create category error:', error.message, error);
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
 
