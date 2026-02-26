@@ -10,14 +10,21 @@ router.use(authMiddleware);
 router.get('/', async (req, res) => {
   try {
     const categories = await db.query(
-      'SELECT * FROM categories WHERE user_id = $1 ORDER BY name',
+      'SELECT id, name, user_id, created_at FROM categories WHERE user_id = $1 ORDER BY name',
       [req.user.userId]
     );
 
-    res.json({ categories: categories.rows });
+    res.status(200).json({ 
+      success: true,
+      data: categories.rows,
+      count: categories.rows.length
+    });
   } catch (error) {
-    console.error('Get categories error:', error.message, error);
-    res.status(500).json({ message: 'Server error', error: error.message });
+    console.error('Get categories error:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Server error fetching categories' 
+    });
   }
 });
 
@@ -26,39 +33,49 @@ router.post('/', async (req, res) => {
   try {
     const { name } = req.body;
 
-    if (!name) {
-      return res.status(400).json({ message: 'Please provide category name' });
+    if (!name || name.trim() === '') {
+      return res.status(400).json({ 
+        success: false,
+        message: 'Please provide a category name' 
+      });
     }
 
     // Check if category with same name already exists for this user
     const existing = await db.query(
-      'SELECT * FROM categories WHERE name = $1 AND user_id = $2',
+      'SELECT id FROM categories WHERE LOWER(name) = LOWER($1) AND user_id = $2',
       [name, req.user.userId]
     );
 
     if (existing.rows.length > 0) {
-      return res.status(400).json({ message: 'Category with this name already exists' });
+      return res.status(400).json({ 
+        success: false,
+        message: 'Category with this name already exists' 
+      });
     }
 
     const result = await db.query(
       'INSERT INTO categories (name, user_id) VALUES ($1, $2) RETURNING id',
-      [name, req.user.userId]
+      [name.trim(), req.user.userId]
     );
 
     const categoryId = result.rows[0].id;
 
     const categories = await db.query(
-      'SELECT * FROM categories WHERE id = $1',
+      'SELECT id, name, user_id, created_at FROM categories WHERE id = $1',
       [categoryId]
     );
 
     res.status(201).json({
+      success: true,
       message: 'Category created successfully',
-      category: categories.rows[0]
+      data: categories.rows[0]
     });
   } catch (error) {
-    console.error('Create category error:', error.message, error);
-    res.status(500).json({ message: 'Server error', error: error.message });
+    console.error('Create category error:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Server error creating category' 
+    });
   }
 });
 
@@ -67,53 +84,79 @@ router.put('/:id', async (req, res) => {
   try {
     const { name } = req.body;
 
-    if (!name) {
-      return res.status(400).json({ message: 'Please provide category name' });
+    if (!name || name.trim() === '') {
+      return res.status(400).json({ 
+        success: false,
+        message: 'Please provide a category name' 
+      });
     }
 
     // Check if category exists and belongs to user
     const existing = await db.query(
-      'SELECT * FROM categories WHERE id = $1 AND user_id = $2',
+      'SELECT id FROM categories WHERE id = $1 AND user_id = $2',
       [req.params.id, req.user.userId]
     );
 
     if (existing.rows.length === 0) {
-      return res.status(404).json({ message: 'Category not found' });
+      return res.status(404).json({ 
+        success: false,
+        message: 'Category not found' 
+      });
     }
 
     // Check if another category with same name exists
     const duplicate = await db.query(
-      'SELECT * FROM categories WHERE name = $1 AND user_id = $2 AND id != $3',
+      'SELECT id FROM categories WHERE LOWER(name) = LOWER($1) AND user_id = $2 AND id != $3',
       [name, req.user.userId, req.params.id]
     );
 
     if (duplicate.rows.length > 0) {
-      return res.status(400).json({ message: 'Category with this name already exists' });
+      return res.status(400).json({ 
+        success: false,
+        message: 'Category with this name already exists' 
+      });
     }
 
     await db.query(
       'UPDATE categories SET name = $1 WHERE id = $2 AND user_id = $3',
-      [name, req.params.id, req.user.userId]
+      [name.trim(), req.params.id, req.user.userId]
     );
 
     const categories = await db.query(
-      'SELECT * FROM categories WHERE id = $1',
+      'SELECT id, name, user_id, created_at FROM categories WHERE id = $1',
       [req.params.id]
     );
 
-    res.json({
+    res.status(200).json({
+      success: true,
       message: 'Category updated successfully',
-      category: categories.rows[0]
+      data: categories.rows[0]
     });
   } catch (error) {
     console.error('Update category error:', error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ 
+      success: false,
+      message: 'Server error updating category' 
+    });
   }
 });
 
 // DELETE /api/categories/:id - Delete category
 router.delete('/:id', async (req, res) => {
   try {
+    // Check if category belongs to user first
+    const categoryCheck = await db.query(
+      'SELECT id FROM categories WHERE id = $1 AND user_id = $2',
+      [req.params.id, req.user.userId]
+    );
+
+    if (categoryCheck.rows.length === 0) {
+      return res.status(404).json({ 
+        success: false,
+        message: 'Category not found' 
+      });
+    }
+
     // Check if category has expenses
     const expenses = await db.query(
       'SELECT COUNT(*) as count FROM expenses WHERE category_id = $1',
@@ -122,7 +165,8 @@ router.delete('/:id', async (req, res) => {
 
     if (parseInt(expenses.rows[0].count) > 0) {
       return res.status(400).json({
-        message: 'Cannot delete category with existing expenses'
+        success: false,
+        message: 'Cannot delete category with existing expenses. Please delete associated expenses first.'
       });
     }
 
@@ -131,14 +175,16 @@ router.delete('/:id', async (req, res) => {
       [req.params.id, req.user.userId]
     );
 
-    if (result.rowCount === 0) {
-      return res.status(404).json({ message: 'Category not found' });
-    }
-
-    res.json({ message: 'Category deleted successfully' });
+    res.status(200).json({ 
+      success: true,
+      message: 'Category deleted successfully' 
+    });
   } catch (error) {
     console.error('Delete category error:', error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ 
+      success: false,
+      message: 'Server error deleting category' 
+    });
   }
 });
 

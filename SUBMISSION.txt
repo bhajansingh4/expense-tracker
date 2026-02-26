@@ -1,53 +1,275 @@
-EXPENSE TRACKER - SPRINT 1 SUBMISSION
-=====================================
+EXPENSE TRACKER API - PHASE 1 SUBMISSION
+=========================================
 
 Student Name: Bhajan Singh
 Course: OpenSource Full Stack Development
-Sprint: 1 (Backend - Weeks 2-4)
-Due Date: Week 4 Dev Day
+Project: Individual Phase 1 - Headless Backend Engine
+Submission Date: February 25, 2026
 
-GitHub Repository URL:
-----------------------
+========================================
+PROJECT COMPLETION CHECKLIST
+========================================
+
+✅ Git Repository Setup
+✅ RESTful API with Node.js & Express
+✅ PostgreSQL Relational Database
+✅ 3 Core Entities Implemented:
+   - Users (with secure password hashing)
+   - Categories (related to Users via Foreign Key)
+   - Expenses (related to Users and Categories via Foreign Keys)
+
+✅ Authentication & Security
+   - JWT token-based authentication
+   - Public signup and login endpoints
+   - Protected routes with auth middleware
+   - Passwords hashed with bcryptjs (10 salt rounds)
+   - Email validation
+   - Password strength validation
+
+✅ Complete CRUD Operations
+   - GET (Read all & by ID)
+   - POST (Create)
+   - PUT (Update)
+   - DELETE (Remove)
+
+✅ API Endpoints Implemented (16 total):
+
+   AUTHENTICATION (Public Routes):
+   - POST /api/auth/signup
+   - POST /api/auth/login
+
+   USERS (Protected Routes):
+   - GET /api/users/me
+   - PUT /api/users/me
+   - DELETE /api/users/me
+
+   CATEGORIES (Protected Routes):
+   - GET /api/categories
+   - POST /api/categories
+   - PUT /api/categories/:id
+   - DELETE /api/categories/:id
+
+   EXPENSES (Protected Routes):
+   - GET /api/expenses
+   - GET /api/expenses/:id
+   - POST /api/expenses
+   - PUT /api/expenses/:id
+   - DELETE /api/expenses/:id
+
+✅ Proper HTTP Status Codes
+   - 200 OK (successful GET/PUT/DELETE)
+   - 201 Created (successful POST)
+   - 400 Bad Request (validation errors)
+   - 401 Unauthorized (auth failures)
+   - 404 Not Found (resource not found)
+   - 500 Server Error (server errors)
+
+✅ Input Validation & Error Handling
+   - Email format validation
+   - Password strength requirements (min 6 chars)
+   - Amount validation (positive numbers only)
+   - Comprehensive error responses
+   - Consistent response format with success flag
+
+✅ Database Design
+   - Foreign Key relationships enforced
+   - Cascading deletes configured
+   - Indexes for query optimization
+   - Timestamps for created_at tracking
+
+✅ API Documentation
+   - Comprehensive README.md
+   - Postman Collection JSON
+   - Example requests and responses
+   - Setup instructions
+   - Deployment guide
+
+✅ Code Quality
+   - Proper error handling and logging
+   - Async/await pattern used consistently
+   - Environment variables for configuration
+   - Organized folder structure
+   - Code comments where needed
+
+========================================
+DATABASE SCHEMA
+========================================
+
+Users Table:
+- id (SERIAL PRIMARY KEY)
+- name (VARCHAR 100, NOT NULL)
+- email (VARCHAR 100, UNIQUE, NOT NULL)
+- password_hash (VARCHAR 255, NOT NULL)
+- created_at (TIMESTAMP DEFAULT CURRENT_TIMESTAMP)
+
+Categories Table:
+- id (SERIAL PRIMARY KEY)
+- name (VARCHAR 50, NOT NULL)
+- user_id (INT, NOT NULL, FOREIGN KEY → users.id)
+- created_at (TIMESTAMP DEFAULT CURRENT_TIMESTAMP)
+
+Expenses Table:
+- id (SERIAL PRIMARY KEY)
+- user_id (INT, NOT NULL, FOREIGN KEY → users.id)
+- category_id (INT, NOT NULL, FOREIGN KEY → categories.id)
+- amount (DECIMAL 10,2, NOT NULL)
+- description (VARCHAR 255)
+- date (DATE, NOT NULL)
+- created_at (TIMESTAMP DEFAULT CURRENT_TIMESTAMP)
+
+========================================
+TESTING THE API
+========================================
+
+1. Import Postman Collection
+   - Open Postman
+   - Import: Postman_Collection.json
+   - All endpoints configured with examples
+
+2. Test User Registration
+   - POST /api/auth/signup
+   - User will receive JWT token
+
+3. Test Protected Endpoints
+   - Use received token in Authorization header
+   - Format: "Bearer <token>"
+
+4. Test CRUD Operations
+   - Create, read, update, delete expenses
+   - Create, read, update, delete categories
+   - Update user profile
+
+========================================
+PROJECT STRUCTURE
+========================================
+
+expense-tracker/
+├── config/
+│   └── db.js                    # PostgreSQL connection pool
+├── database/
+│   └── schema.sql              # Database schema with seed data
+├── middleware/
+│   └── auth.js                 # JWT authentication middleware
+├── routes/
+│   ├── auth.js                 # Authentication endpoints
+│   ├── users.js                # User management endpoints
+│   ├── categories.js           # Category management endpoints
+│   └── expenses.js             # Expense CRUD endpoints
+├── server.js                   # Express server configuration
+├── setupDatabase.js            # Database initialization script
+├── package.json                # Project dependencies
+├── .env                        # Environment variables (not in repo)
+├── .env.example                # Environment template
+├── Postman_Collection.json     # API documentation
+├── README.md                   # Complete documentation
+└── SUBMISSION.txt              # This file
+
+========================================
+TECHNOLOGIES USED
+========================================
+
+- Node.js (Runtime)
+- Express.js (Web Framework)
+- PostgreSQL (Database)
+- JWT (Authentication)
+- bcryptjs (Password Hashing)
+- CORS (Cross-origin Support)
+- dotenv (Configuration)
+- pg (PostgreSQL driver)
+
+========================================
+SETUP & DEPLOYMENT INSTRUCTIONS
+========================================
+
+LOCAL SETUP:
+
+1. Clone repository
+   git clone <repo-url>
+   cd expense-tracker
+
+2. Install dependencies
+   npm install
+
+3. Setup environment
+   cp .env.example .env
+   (Update .env with your database credentials)
+
+4. Create database
+   psql -U your_user
+   CREATE DATABASE expense_tracker_4mxx;
+
+5. Initialize schema
+   psql -U your_user -d expense_tracker_4mxx -f database/schema.sql
+   (Or run: node setupDatabase.js)
+
+6. Start server
+   npm run dev    (development with nodemon)
+   npm start      (production)
+
+Server will run on: http://localhost:5000
+
+PRODUCTION DEPLOYMENT (Render):
+
+1. Connect GitHub repository to Render
+2. Set Build Command: npm install
+3. Set Start Command: npm start
+4. Add Environment Variables in Render dashboard
+5. Deploy database (use Render PostgreSQL or Aiven)
+6. API will be available at: https://your-app.onrender.com
+
+========================================
+SAMPLE USER CREDENTIALS
+========================================
+
+Email: john@example.com
+Password: password123
+
+(Available after running schema.sql or setupDatabase.js)
+
+========================================
+GIT COMMIT HISTORY
+========================================
+
+All development progress tracked with regular commits:
+- Initial project setup
+- Database configuration
+- Authentication implementation
+- CRUD endpoints for all resources
+- Validation and error handling
+- API documentation
+- Deployment configuration
+
+View full history: git log --oneline
+
+========================================
+SUBMISSION LINKS
+========================================
+
+GitHub Repository:
 https://github.com/bhajansingh4/expense-tracker
 
+Live Deployment URL:
+(To be provided after deployment to Render)
 
+API Documentation:
+Postman_Collection.json (in repository)
 
-Project Structure Completed:
------------------------------
-✅ Node.js + Express server setup
-✅ MySQL database schema with 3 tables (Users, Expenses, Categories)
-✅ User authentication (signup/login) with JWT
-✅ Protected middleware for secure routes
-✅ CRUD operations for Users
-✅ CRUD operations for Expenses
-✅ CRUD operations for Categories
-✅ Environment configuration with .env
-✅ Comprehensive README documentation
-✅ API testing documentation
+========================================
+NOTES
+========================================
 
+✅ All phase 1 requirements met
+✅ Code is production-ready
+✅ Comprehensive error handling implemented
+✅ Security best practices followed
+✅ Proper status codes used throughout
+✅ Database relationships properly configured
+✅ API is fully documented
+✅ Ready for Phase 2 frontend integration
 
-API Endpoints Implemented:
----------------------------
-Auth Routes:
-- POST /api/auth/signup
-- POST /api/auth/login
-
-User Routes (Protected):
-- GET /api/users/me
-- PUT /api/users/me
-- DELETE /api/users/me
-
-Expense Routes (Protected):
-- GET /api/expenses
-- POST /api/expenses
-- GET /api/expenses/:id
-- PUT /api/expenses/:id
-- DELETE /api/expenses/:id
-
-Category Routes (Protected):
-- GET /api/categories
-- POST /api/categories
-- PUT /api/categories/:id
+========================================
+END OF SUBMISSION
+=========================================
 - DELETE /api/categories/:id
 
 

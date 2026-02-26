@@ -4,6 +4,12 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const db = require('../config/db');
 
+// Validation helper
+const validateEmail = (email) => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+};
+
 // POST /api/auth/signup - Register new user
 router.post('/signup', async (req, res) => {
   try {
@@ -11,17 +17,39 @@ router.post('/signup', async (req, res) => {
 
     // Validate input
     if (!name || !email || !password) {
-      return res.status(400).json({ message: 'Please provide all required fields' });
+      return res.status(400).json({ 
+        success: false,
+        message: 'Please provide all required fields: name, email, password' 
+      });
+    }
+
+    // Validate email format
+    if (!validateEmail(email)) {
+      return res.status(400).json({ 
+        success: false,
+        message: 'Please provide a valid email address' 
+      });
+    }
+
+    // Validate password strength
+    if (password.length < 6) {
+      return res.status(400).json({ 
+        success: false,
+        message: 'Password must be at least 6 characters long' 
+      });
     }
 
     // Check if user already exists
-    const existingUsers = await db.query('SELECT * FROM users WHERE email = $1', [email]);
+    const existingUsers = await db.query('SELECT id FROM users WHERE email = $1', [email]);
     
     if (existingUsers.rows.length > 0) {
-      return res.status(400).json({ message: 'User already exists with this email' });
+      return res.status(400).json({ 
+        success: false,
+        message: 'User already exists with this email' 
+      });
     }
 
-    // Hash password
+    // Hash password with bcrypt
     const salt = await bcrypt.genSalt(10);
     const passwordHash = await bcrypt.hash(password, salt);
 
@@ -37,11 +65,12 @@ router.post('/signup', async (req, res) => {
     const token = jwt.sign(
       { userId, email },
       process.env.JWT_SECRET,
-      { expiresIn: '24h' }
+      { expiresIn: '7d' }
     );
 
     res.status(201).json({
-      message: 'User created successfully',
+      success: true,
+      message: 'User registered successfully',
       token,
       user: {
         id: userId,
@@ -50,8 +79,11 @@ router.post('/signup', async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Signup error:', error.message, error);
-    res.status(500).json({ message: 'Server error during signup', error: error.message });
+    console.error('Signup error:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Server error during signup' 
+    });
   }
 });
 
@@ -62,14 +94,23 @@ router.post('/login', async (req, res) => {
 
     // Validate input
     if (!email || !password) {
-      return res.status(400).json({ message: 'Please provide email and password' });
+      return res.status(400).json({ 
+        success: false,
+        message: 'Please provide email and password' 
+      });
     }
 
     // Find user
-    const users = await db.query('SELECT * FROM users WHERE email = $1', [email]);
+    const users = await db.query(
+      'SELECT id, name, email, password_hash FROM users WHERE email = $1',
+      [email]
+    );
 
     if (users.rows.length === 0) {
-      return res.status(401).json({ message: 'Invalid credentials' });
+      return res.status(401).json({ 
+        success: false,
+        message: 'Invalid email or password' 
+      });
     }
 
     const user = users.rows[0];
@@ -78,17 +119,21 @@ router.post('/login', async (req, res) => {
     const isMatch = await bcrypt.compare(password, user.password_hash);
 
     if (!isMatch) {
-      return res.status(401).json({ message: 'Invalid credentials' });
+      return res.status(401).json({ 
+        success: false,
+        message: 'Invalid email or password' 
+      });
     }
 
     // Create JWT token
     const token = jwt.sign(
       { userId: user.id, email: user.email },
       process.env.JWT_SECRET,
-      { expiresIn: '24h' }
+      { expiresIn: '7d' }
     );
 
     res.json({
+      success: true,
       message: 'Login successful',
       token,
       user: {
@@ -99,7 +144,10 @@ router.post('/login', async (req, res) => {
     });
   } catch (error) {
     console.error('Login error:', error);
-    res.status(500).json({ message: 'Server error during login' });
+    res.status(500).json({ 
+      success: false,
+      message: 'Server error during login' 
+    });
   }
 });
 

@@ -3,6 +3,12 @@ const router = express.Router();
 const db = require('../config/db');
 const authMiddleware = require('../middleware/auth');
 
+// Validation helper
+const validateEmail = (email) => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+};
+
 // GET /api/users/me - Get current user profile
 router.get('/me', authMiddleware, async (req, res) => {
   try {
@@ -12,13 +18,22 @@ router.get('/me', authMiddleware, async (req, res) => {
     );
 
     if (users.rows.length === 0) {
-      return res.status(404).json({ message: 'User not found' });
+      return res.status(404).json({ 
+        success: false,
+        message: 'User not found' 
+      });
     }
 
-    res.json({ user: users.rows[0] });
+    res.status(200).json({ 
+      success: true,
+      data: users.rows[0] 
+    });
   } catch (error) {
     console.error('Get user error:', error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ 
+      success: false,
+      message: 'Server error fetching user profile' 
+    });
   }
 });
 
@@ -28,21 +43,47 @@ router.put('/me', authMiddleware, async (req, res) => {
     const { name, email } = req.body;
 
     if (!name && !email) {
-      return res.status(400).json({ message: 'Please provide data to update' });
+      return res.status(400).json({ 
+        success: false,
+        message: 'Please provide name or email to update' 
+      });
+    }
+
+    // If email is provided, validate it and check if it's already in use
+    if (email) {
+      if (!validateEmail(email)) {
+        return res.status(400).json({ 
+          success: false,
+          message: 'Please provide a valid email address' 
+        });
+      }
+
+      // Check if email is already used by another user
+      const existingEmail = await db.query(
+        'SELECT id FROM users WHERE email = $1 AND id != $2',
+        [email, req.user.userId]
+      );
+
+      if (existingEmail.rows.length > 0) {
+        return res.status(400).json({ 
+          success: false,
+          message: 'Email is already in use' 
+        });
+      }
     }
 
     let updateQuery = 'UPDATE users SET ';
     const updateValues = [];
     let paramCount = 1;
 
-    if (name) {
+    if (name && name.trim()) {
       updateQuery += `name = $${paramCount}`;
-      updateValues.push(name);
+      updateValues.push(name.trim());
       paramCount++;
     }
 
     if (email) {
-      if (name) updateQuery += ', ';
+      if (name && name.trim()) updateQuery += ', ';
       updateQuery += `email = $${paramCount}`;
       updateValues.push(email);
       paramCount++;
@@ -58,10 +99,17 @@ router.put('/me', authMiddleware, async (req, res) => {
       [req.user.userId]
     );
 
-    res.json({ message: 'Profile updated successfully', user: users.rows[0] });
+    res.status(200).json({ 
+      success: true,
+      message: 'Profile updated successfully', 
+      data: users.rows[0] 
+    });
   } catch (error) {
     console.error('Update user error:', error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ 
+      success: false,
+      message: 'Server error updating profile' 
+    });
   }
 });
 
@@ -69,10 +117,16 @@ router.put('/me', authMiddleware, async (req, res) => {
 router.delete('/me', authMiddleware, async (req, res) => {
   try {
     await db.query('DELETE FROM users WHERE id = $1', [req.user.userId]);
-    res.json({ message: 'Account deleted successfully' });
+    res.status(200).json({ 
+      success: true,
+      message: 'Account deleted successfully' 
+    });
   } catch (error) {
     console.error('Delete user error:', error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ 
+      success: false,
+      message: 'Server error deleting account' 
+    });
   }
 });
 

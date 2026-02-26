@@ -10,7 +10,7 @@ router.use(authMiddleware);
 router.get('/', async (req, res) => {
   try {
     const expenses = await db.query(
-      `SELECT e.*, c.name as category_name 
+      `SELECT e.id, e.user_id, e.category_id, e.amount, e.description, e.date, e.created_at, c.name as category_name 
        FROM expenses e 
        JOIN categories c ON e.category_id = c.id 
        WHERE e.user_id = $1 
@@ -18,10 +18,17 @@ router.get('/', async (req, res) => {
       [req.user.userId]
     );
 
-    res.json({ expenses: expenses.rows });
+    res.status(200).json({ 
+      success: true,
+      data: expenses.rows,
+      count: expenses.rows.length 
+    });
   } catch (error) {
     console.error('Get expenses error:', error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ 
+      success: false,
+      message: 'Server error fetching expenses' 
+    });
   }
 });
 
@@ -29,7 +36,7 @@ router.get('/', async (req, res) => {
 router.get('/:id', async (req, res) => {
   try {
     const expenses = await db.query(
-      `SELECT e.*, c.name as category_name 
+      `SELECT e.id, e.user_id, e.category_id, e.amount, e.description, e.date, e.created_at, c.name as category_name 
        FROM expenses e 
        JOIN categories c ON e.category_id = c.id 
        WHERE e.id = $1 AND e.user_id = $2`,
@@ -37,13 +44,22 @@ router.get('/:id', async (req, res) => {
     );
 
     if (expenses.rows.length === 0) {
-      return res.status(404).json({ message: 'Expense not found' });
+      return res.status(404).json({ 
+        success: false,
+        message: 'Expense not found' 
+      });
     }
 
-    res.json({ expense: expenses.rows[0] });
+    res.status(200).json({ 
+      success: true,
+      data: expenses.rows[0] 
+    });
   } catch (error) {
     console.error('Get expense error:', error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ 
+      success: false,
+      message: 'Server error fetching expense' 
+    });
   }
 });
 
@@ -53,31 +69,45 @@ router.post('/', async (req, res) => {
     const { category_id, amount, description, date } = req.body;
 
     // Validate input
-    if (!category_id || !amount || !date) {
-      return res.status(400).json({ message: 'Please provide category, amount, and date' });
+    if (!category_id || amount === undefined || amount === null || !date) {
+      return res.status(400).json({ 
+        success: false,
+        message: 'Please provide category_id, amount, and date' 
+      });
+    }
+
+    // Validate amount is a positive number
+    if (isNaN(amount) || parseFloat(amount) <= 0) {
+      return res.status(400).json({ 
+        success: false,
+        message: 'Amount must be a positive number' 
+      });
     }
 
     // Verify category belongs to user
     const categories = await db.query(
-      'SELECT * FROM categories WHERE id = $1 AND user_id = $2',
+      'SELECT id FROM categories WHERE id = $1 AND user_id = $2',
       [category_id, req.user.userId]
     );
 
     if (categories.rows.length === 0) {
-      return res.status(400).json({ message: 'Invalid category' });
+      return res.status(400).json({ 
+        success: false,
+        message: 'Invalid category or category does not belong to user' 
+      });
     }
 
     // Insert expense
     const result = await db.query(
       'INSERT INTO expenses (user_id, category_id, amount, description, date) VALUES ($1, $2, $3, $4, $5) RETURNING id',
-      [req.user.userId, category_id, amount, description || '', date]
+      [req.user.userId, category_id, parseFloat(amount), description || null, date]
     );
 
     const expenseId = result.rows[0].id;
 
     // Get created expense
     const expenses = await db.query(
-      `SELECT e.*, c.name as category_name 
+      `SELECT e.id, e.user_id, e.category_id, e.amount, e.description, e.date, e.created_at, c.name as category_name 
        FROM expenses e 
        JOIN categories c ON e.category_id = c.id 
        WHERE e.id = $1`,
@@ -85,12 +115,16 @@ router.post('/', async (req, res) => {
     );
 
     res.status(201).json({
+      success: true,
       message: 'Expense created successfully',
-      expense: expenses.rows[0]
+      data: expenses.rows[0]
     });
   } catch (error) {
     console.error('Create expense error:', error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ 
+      success: false,
+      message: 'Server error creating expense' 
+    });
   }
 });
 
@@ -101,23 +135,39 @@ router.put('/:id', async (req, res) => {
 
     // Check if expense exists and belongs to user
     const existingExpenses = await db.query(
-      'SELECT * FROM expenses WHERE id = $1 AND user_id = $2',
+      'SELECT id FROM expenses WHERE id = $1 AND user_id = $2',
       [req.params.id, req.user.userId]
     );
 
     if (existingExpenses.rows.length === 0) {
-      return res.status(404).json({ message: 'Expense not found' });
+      return res.status(404).json({ 
+        success: false,
+        message: 'Expense not found' 
+      });
     }
 
     // If category_id is provided, verify it belongs to user
-    if (category_id) {
+    if (category_id !== undefined && category_id !== null) {
       const categories = await db.query(
-        'SELECT * FROM categories WHERE id = $1 AND user_id = $2',
+        'SELECT id FROM categories WHERE id = $1 AND user_id = $2',
         [category_id, req.user.userId]
       );
 
       if (categories.rows.length === 0) {
-        return res.status(400).json({ message: 'Invalid category' });
+        return res.status(400).json({ 
+          success: false,
+          message: 'Invalid category or category does not belong to user' 
+        });
+      }
+    }
+
+    // Validate amount if provided
+    if (amount !== undefined && amount !== null) {
+      if (isNaN(amount) || parseFloat(amount) <= 0) {
+        return res.status(400).json({ 
+          success: false,
+          message: 'Amount must be a positive number' 
+        });
       }
     }
 
@@ -126,25 +176,33 @@ router.put('/:id', async (req, res) => {
     const updateValues = [];
     let paramCount = 1;
 
-    if (category_id !== undefined) {
+    if (category_id !== undefined && category_id !== null) {
       updateQuery += `category_id = $${paramCount}, `;
       updateValues.push(category_id);
       paramCount++;
     }
-    if (amount !== undefined) {
+    if (amount !== undefined && amount !== null) {
       updateQuery += `amount = $${paramCount}, `;
-      updateValues.push(amount);
+      updateValues.push(parseFloat(amount));
       paramCount++;
     }
     if (description !== undefined) {
       updateQuery += `description = $${paramCount}, `;
-      updateValues.push(description);
+      updateValues.push(description || null);
       paramCount++;
     }
-    if (date !== undefined) {
+    if (date !== undefined && date !== null) {
       updateQuery += `date = $${paramCount}, `;
       updateValues.push(date);
       paramCount++;
+    }
+
+    // If no fields to update, return error
+    if (updateValues.length === 0) {
+      return res.status(400).json({ 
+        success: false,
+        message: 'No fields to update provided' 
+      });
     }
 
     // Remove trailing comma and space
@@ -156,20 +214,24 @@ router.put('/:id', async (req, res) => {
 
     // Get updated expense
     const expenses = await db.query(
-      `SELECT e.*, c.name as category_name 
+      `SELECT e.id, e.user_id, e.category_id, e.amount, e.description, e.date, e.created_at, c.name as category_name 
        FROM expenses e 
        JOIN categories c ON e.category_id = c.id 
        WHERE e.id = $1`,
       [req.params.id]
     );
 
-    res.json({
+    res.status(200).json({
+      success: true,
       message: 'Expense updated successfully',
-      expense: expenses.rows[0]
+      data: expenses.rows[0]
     });
   } catch (error) {
     console.error('Update expense error:', error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ 
+      success: false,
+      message: 'Server error updating expense' 
+    });
   }
 });
 
@@ -182,13 +244,22 @@ router.delete('/:id', async (req, res) => {
     );
 
     if (result.rowCount === 0) {
-      return res.status(404).json({ message: 'Expense not found' });
+      return res.status(404).json({ 
+        success: false,
+        message: 'Expense not found' 
+      });
     }
 
-    res.json({ message: 'Expense deleted successfully' });
+    res.status(200).json({ 
+      success: true,
+      message: 'Expense deleted successfully' 
+    });
   } catch (error) {
     console.error('Delete expense error:', error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ 
+      success: false,
+      message: 'Server error deleting expense' 
+    });
   }
 });
 
