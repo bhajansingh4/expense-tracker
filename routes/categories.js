@@ -118,7 +118,7 @@ router.put('/:id', async (req, res) => {
     }
 
     await db.query(
-      'UPDATE categories SET name = $1 WHERE id = $2 AND user_id = $3',
+      'UPDATE exp_categories SET name = $1 WHERE id = $2 AND user_id = $3',
       [name.trim(), req.params.id, req.user.userId]
     );
 

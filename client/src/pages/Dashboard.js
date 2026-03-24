@@ -29,12 +29,12 @@ function Dashboard({ user, onLogout }) {
       ]);
 
       if (expensesRes.data.success) {
-        setExpenses(expensesRes.data.expenses || []);
-        calculateStats(expensesRes.data.expenses || []);
+        setExpenses(expensesRes.data.data || []);
+        calculateStats(expensesRes.data.data || []);
       }
 
       if (categoriesRes.data.success) {
-        setCategories(categoriesRes.data.categories || []);
+        setCategories(categoriesRes.data.data || []);
       }
     } catch (error) {
       console.error('Error fetching data:', error);

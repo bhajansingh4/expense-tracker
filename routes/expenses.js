@@ -12,7 +12,7 @@ router.get('/', async (req, res) => {
     const expenses = await db.query(
       `SELECT e.id, e.user_id, e.category_id, e.amount, e.description, e.date, e.created_at, c.name as category_name 
        FROM exp_expenses e 
-       JOIN categories c ON e.category_id = c.id 
+       JOIN exp_categories c ON e.category_id = c.id 
        WHERE e.user_id = $1 
        ORDER BY e.date DESC`,
       [req.user.userId]
@@ -38,7 +38,7 @@ router.get('/:id', async (req, res) => {
     const expenses = await db.query(
       `SELECT e.id, e.user_id, e.category_id, e.amount, e.description, e.date, e.created_at, c.name as category_name 
        FROM exp_expenses e 
-       JOIN categories c ON e.category_id = c.id 
+       JOIN exp_categories c ON e.category_id = c.id 
        WHERE e.id = $1 AND e.user_id = $2`,
       [req.params.id, req.user.userId]
     );
@@ -109,7 +109,7 @@ router.post('/', async (req, res) => {
     const expenses = await db.query(
       `SELECT e.id, e.user_id, e.category_id, e.amount, e.description, e.date, e.created_at, c.name as category_name 
        FROM exp_expenses e 
-       JOIN categories c ON e.category_id = c.id 
+       JOIN exp_categories c ON e.category_id = c.id 
        WHERE e.id = $1`,
       [expenseId]
     );
@@ -172,7 +172,7 @@ router.put('/:id', async (req, res) => {
     }
 
     // Build update query
-    let updateQuery = 'UPDATE expenses SET ';
+    let updateQuery = 'UPDATE exp_expenses SET ';
     const updateValues = [];
     let paramCount = 1;
 
@@ -216,7 +216,7 @@ router.put('/:id', async (req, res) => {
     const expenses = await db.query(
       `SELECT e.id, e.user_id, e.category_id, e.amount, e.description, e.date, e.created_at, c.name as category_name 
        FROM exp_expenses e 
-       JOIN categories c ON e.category_id = c.id 
+       JOIN exp_categories c ON e.category_id = c.id 
        WHERE e.id = $1`,
       [req.params.id]
     );
