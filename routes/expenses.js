@@ -11,7 +11,7 @@ router.get('/', async (req, res) => {
   try {
     const expenses = await db.query(
       `SELECT e.id, e.user_id, e.category_id, e.amount, e.description, e.date, e.created_at, c.name as category_name 
-       FROM expenses e 
+       FROM exp_expenses e 
        JOIN categories c ON e.category_id = c.id 
        WHERE e.user_id = $1 
        ORDER BY e.date DESC`,
@@ -37,7 +37,7 @@ router.get('/:id', async (req, res) => {
   try {
     const expenses = await db.query(
       `SELECT e.id, e.user_id, e.category_id, e.amount, e.description, e.date, e.created_at, c.name as category_name 
-       FROM expenses e 
+       FROM exp_expenses e 
        JOIN categories c ON e.category_id = c.id 
        WHERE e.id = $1 AND e.user_id = $2`,
       [req.params.id, req.user.userId]
@@ -86,7 +86,7 @@ router.post('/', async (req, res) => {
 
     // Verify category belongs to user
     const categories = await db.query(
-      'SELECT id FROM categories WHERE id = $1 AND user_id = $2',
+      'SELECT id FROM exp_categories WHERE id = $1 AND user_id = $2',
       [category_id, req.user.userId]
     );
 
@@ -99,7 +99,7 @@ router.post('/', async (req, res) => {
 
     // Insert expense
     const result = await db.query(
-      'INSERT INTO expenses (user_id, category_id, amount, description, date) VALUES ($1, $2, $3, $4, $5) RETURNING id',
+      'INSERT INTO exp_expenses (user_id, category_id, amount, description, date) VALUES ($1, $2, $3, $4, $5) RETURNING id',
       [req.user.userId, category_id, parseFloat(amount), description || null, date]
     );
 
@@ -108,7 +108,7 @@ router.post('/', async (req, res) => {
     // Get created expense
     const expenses = await db.query(
       `SELECT e.id, e.user_id, e.category_id, e.amount, e.description, e.date, e.created_at, c.name as category_name 
-       FROM expenses e 
+       FROM exp_expenses e 
        JOIN categories c ON e.category_id = c.id 
        WHERE e.id = $1`,
       [expenseId]
@@ -135,7 +135,7 @@ router.put('/:id', async (req, res) => {
 
     // Check if expense exists and belongs to user
     const existingExpenses = await db.query(
-      'SELECT id FROM expenses WHERE id = $1 AND user_id = $2',
+      'SELECT id FROM exp_expenses WHERE id = $1 AND user_id = $2',
       [req.params.id, req.user.userId]
     );
 
@@ -149,7 +149,7 @@ router.put('/:id', async (req, res) => {
     // If category_id is provided, verify it belongs to user
     if (category_id !== undefined && category_id !== null) {
       const categories = await db.query(
-        'SELECT id FROM categories WHERE id = $1 AND user_id = $2',
+        'SELECT id FROM exp_categories WHERE id = $1 AND user_id = $2',
         [category_id, req.user.userId]
       );
 
@@ -215,7 +215,7 @@ router.put('/:id', async (req, res) => {
     // Get updated expense
     const expenses = await db.query(
       `SELECT e.id, e.user_id, e.category_id, e.amount, e.description, e.date, e.created_at, c.name as category_name 
-       FROM expenses e 
+       FROM exp_expenses e 
        JOIN categories c ON e.category_id = c.id 
        WHERE e.id = $1`,
       [req.params.id]
@@ -239,7 +239,7 @@ router.put('/:id', async (req, res) => {
 router.delete('/:id', async (req, res) => {
   try {
     const result = await db.query(
-      'DELETE FROM expenses WHERE id = $1 AND user_id = $2',
+      'DELETE FROM exp_expenses WHERE id = $1 AND user_id = $2',
       [req.params.id, req.user.userId]
     );
 

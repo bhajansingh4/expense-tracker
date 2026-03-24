@@ -40,7 +40,7 @@ router.post('/signup', async (req, res) => {
     }
 
     // Check if user already exists
-    const existingUsers = await db.query('SELECT id FROM users WHERE email = $1', [email]);
+    const existingUsers = await db.query('SELECT id FROM exp_users WHERE email = $1', [email]);
     
     if (existingUsers.rows.length > 0) {
       return res.status(400).json({ 
@@ -55,7 +55,7 @@ router.post('/signup', async (req, res) => {
 
     // Insert user into database
     const result = await db.query(
-      'INSERT INTO users (name, email, password_hash) VALUES ($1, $2, $3) RETURNING id',
+      'INSERT INTO exp_users (name, email, password_hash) VALUES ($1, $2, $3) RETURNING id',
       [name, email, passwordHash]
     );
 
@@ -102,7 +102,7 @@ router.post('/login', async (req, res) => {
 
     // Find user
     const users = await db.query(
-      'SELECT id, name, email, password_hash FROM users WHERE email = $1',
+      'SELECT id, name, email, password_hash FROM exp_users WHERE email = $1',
       [email]
     );
 

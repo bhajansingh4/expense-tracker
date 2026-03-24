@@ -10,7 +10,7 @@ router.use(authMiddleware);
 router.get('/', async (req, res) => {
   try {
     const categories = await db.query(
-      'SELECT id, name, user_id, created_at FROM categories WHERE user_id = $1 ORDER BY name',
+      'SELECT id, name, user_id, created_at FROM exp_categories WHERE user_id = $1 ORDER BY name',
       [req.user.userId]
     );
 
@@ -42,7 +42,7 @@ router.post('/', async (req, res) => {
 
     // Check if category with same name already exists for this user
     const existing = await db.query(
-      'SELECT id FROM categories WHERE LOWER(name) = LOWER($1) AND user_id = $2',
+      'SELECT id FROM exp_categories WHERE LOWER(name) = LOWER($1) AND user_id = $2',
       [name, req.user.userId]
     );
 
@@ -54,14 +54,14 @@ router.post('/', async (req, res) => {
     }
 
     const result = await db.query(
-      'INSERT INTO categories (name, user_id) VALUES ($1, $2) RETURNING id',
+      'INSERT INTO exp_categories (name, user_id) VALUES ($1, $2) RETURNING id',
       [name.trim(), req.user.userId]
     );
 
     const categoryId = result.rows[0].id;
 
     const categories = await db.query(
-      'SELECT id, name, user_id, created_at FROM categories WHERE id = $1',
+      'SELECT id, name, user_id, created_at FROM exp_categories WHERE id = $1',
       [categoryId]
     );
 
@@ -93,7 +93,7 @@ router.put('/:id', async (req, res) => {
 
     // Check if category exists and belongs to user
     const existing = await db.query(
-      'SELECT id FROM categories WHERE id = $1 AND user_id = $2',
+      'SELECT id FROM exp_categories WHERE id = $1 AND user_id = $2',
       [req.params.id, req.user.userId]
     );
 
@@ -106,7 +106,7 @@ router.put('/:id', async (req, res) => {
 
     // Check if another category with same name exists
     const duplicate = await db.query(
-      'SELECT id FROM categories WHERE LOWER(name) = LOWER($1) AND user_id = $2 AND id != $3',
+      'SELECT id FROM exp_categories WHERE LOWER(name) = LOWER($1) AND user_id = $2 AND id != $3',
       [name, req.user.userId, req.params.id]
     );
 
@@ -123,7 +123,7 @@ router.put('/:id', async (req, res) => {
     );
 
     const categories = await db.query(
-      'SELECT id, name, user_id, created_at FROM categories WHERE id = $1',
+      'SELECT id, name, user_id, created_at FROM exp_categories WHERE id = $1',
       [req.params.id]
     );
 
@@ -146,7 +146,7 @@ router.delete('/:id', async (req, res) => {
   try {
     // Check if category belongs to user first
     const categoryCheck = await db.query(
-      'SELECT id FROM categories WHERE id = $1 AND user_id = $2',
+      'SELECT id FROM exp_categories WHERE id = $1 AND user_id = $2',
       [req.params.id, req.user.userId]
     );
 
@@ -159,7 +159,7 @@ router.delete('/:id', async (req, res) => {
 
     // Check if category has expenses
     const expenses = await db.query(
-      'SELECT COUNT(*) as count FROM expenses WHERE category_id = $1',
+      'SELECT COUNT(*) as count FROM exp_expenses WHERE category_id = $1',
       [req.params.id]
     );
 
@@ -171,7 +171,7 @@ router.delete('/:id', async (req, res) => {
     }
 
     const result = await db.query(
-      'DELETE FROM categories WHERE id = $1 AND user_id = $2',
+      'DELETE FROM exp_categories WHERE id = $1 AND user_id = $2',
       [req.params.id, req.user.userId]
     );
 

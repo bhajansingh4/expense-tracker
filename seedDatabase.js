@@ -8,9 +8,9 @@ async function seedDatabase() {
 
     // Clear existing data
     console.log('🧹 Clearing existing data...');
-    await db.query('DELETE FROM expenses');
-    await db.query('DELETE FROM categories');
-    await db.query('DELETE FROM users');
+    await db.query('DELETE FROM exp_expenses');
+    await db.query('DELETE FROM exp_categories');
+    await db.query('DELETE FROM exp_users');
 
     // Create test users
     console.log('👥 Creating test users...');
@@ -18,7 +18,7 @@ async function seedDatabase() {
     
     const user1Password = await bcrypt.hash('password123', salt);
     const user1Result = await db.query(
-      'INSERT INTO users (name, email, password_hash) VALUES ($1, $2, $3) RETURNING id, email, name',
+      'INSERT INTO exp_users (name, email, password_hash) VALUES ($1, $2, $3) RETURNING id, email, name',
       ['John Doe', 'john@example.com', user1Password]
     );
     const user1Id = user1Result.rows[0].id;
@@ -26,7 +26,7 @@ async function seedDatabase() {
 
     const user2Password = await bcrypt.hash('password123', salt);
     const user2Result = await db.query(
-      'INSERT INTO users (name, email, password_hash) VALUES ($1, $2, $3) RETURNING id, email, name',
+      'INSERT INTO exp_users (name, email, password_hash) VALUES ($1, $2, $3) RETURNING id, email, name',
       ['Jane Smith', 'jane@example.com', user2Password]
     );
     const user2Id = user2Result.rows[0].id;
@@ -48,7 +48,7 @@ async function seedDatabase() {
     const categoryIds1 = [];
     for (const category of categories1) {
       const result = await db.query(
-        'INSERT INTO categories (name, user_id) VALUES ($1, $2) RETURNING id',
+        'INSERT INTO exp_categories (name, user_id) VALUES ($1, $2) RETURNING id',
         [category.name, user1Id]
       );
       categoryIds1.push(result.rows[0].id);
@@ -60,7 +60,7 @@ async function seedDatabase() {
     const categoryIds2 = [];
     for (const category of categories1) {
       const result = await db.query(
-        'INSERT INTO categories (name, user_id) VALUES ($1, $2) RETURNING id',
+        'INSERT INTO exp_categories (name, user_id) VALUES ($1, $2) RETURNING id',
         [category.name, user2Id]
       );
       categoryIds2.push(result.rows[0].id);
@@ -86,7 +86,7 @@ async function seedDatabase() {
       date.setDate(date.getDate() - expense.daysAgo);
       
       await db.query(
-        'INSERT INTO expenses (user_id, category_id, amount, description, date) VALUES ($1, $2, $3, $4, $5)',
+        'INSERT INTO exp_expenses (user_id, category_id, amount, description, date) VALUES ($1, $2, $3, $4, $5)',
         [user1Id, categoryIds1[expense.categoryIndex], expense.amount, expense.description, date.toISOString().split('T')[0]]
       );
       console.log(`✅ Created expense: $${expense.amount} - ${expense.description}`);
@@ -105,7 +105,7 @@ async function seedDatabase() {
       date.setDate(date.getDate() - expense.daysAgo);
       
       await db.query(
-        'INSERT INTO expenses (user_id, category_id, amount, description, date) VALUES ($1, $2, $3, $4, $5)',
+        'INSERT INTO exp_expenses (user_id, category_id, amount, description, date) VALUES ($1, $2, $3, $4, $5)',
         [user2Id, categoryIds2[expense.categoryIndex], expense.amount, expense.description, date.toISOString().split('T')[0]]
       );
       console.log(`✅ Created expense: $${expense.amount} - ${expense.description}`);

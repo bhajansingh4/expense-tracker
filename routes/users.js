@@ -13,7 +13,7 @@ const validateEmail = (email) => {
 router.get('/me', authMiddleware, async (req, res) => {
   try {
     const users = await db.query(
-      'SELECT id, name, email, created_at FROM users WHERE id = $1',
+      'SELECT id, name, email, created_at FROM exp_users WHERE id = $1',
       [req.user.userId]
     );
 
@@ -60,7 +60,7 @@ router.put('/me', authMiddleware, async (req, res) => {
 
       // Check if email is already used by another user
       const existingEmail = await db.query(
-        'SELECT id FROM users WHERE email = $1 AND id != $2',
+        'SELECT id FROM exp_users WHERE email = $1 AND id != $2',
         [email, req.user.userId]
       );
 
@@ -72,7 +72,7 @@ router.put('/me', authMiddleware, async (req, res) => {
       }
     }
 
-    let updateQuery = 'UPDATE users SET ';
+    let updateQuery = 'UPDATE exp_users SET ';
     const updateValues = [];
     let paramCount = 1;
 
@@ -95,7 +95,7 @@ router.put('/me', authMiddleware, async (req, res) => {
     await db.query(updateQuery, updateValues);
 
     const users = await db.query(
-      'SELECT id, name, email, created_at FROM users WHERE id = $1',
+      'SELECT id, name, email, created_at FROM exp_users WHERE id = $1',
       [req.user.userId]
     );
 
@@ -116,7 +116,7 @@ router.put('/me', authMiddleware, async (req, res) => {
 // DELETE /api/users/me - Delete user account
 router.delete('/me', authMiddleware, async (req, res) => {
   try {
-    await db.query('DELETE FROM users WHERE id = $1', [req.user.userId]);
+    await db.query('DELETE FROM exp_users WHERE id = $1', [req.user.userId]);
     res.status(200).json({ 
       success: true,
       message: 'Account deleted successfully' 
