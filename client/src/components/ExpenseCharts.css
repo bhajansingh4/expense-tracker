@@ -1,0 +1,90 @@
+/* Expense Charts Styles */
+.expense-charts-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+  gap: 30px;
+  padding: 20px;
+  margin: 20px 0;
+}
+
+.chart-wrapper {
+  background: white;
+  border-radius: 12px;
+  padding: 25px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+}
+
+.chart-wrapper:hover {
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+  transform: translateY(-2px);
+}
+
+.chart-title {
+  margin: 0 0 20px;
+  font-size: 18px;
+  font-weight: 600;
+  color: #2c3e50;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.custom-tooltip {
+  background: rgba(0, 0, 0, 0.8);
+  padding: 10px 15px;
+  border-radius: 6px;
+  color: white;
+  font-size: 14px;
+}
+
+.tooltip-label {
+  margin: 0;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.tooltip-value {
+  margin: 5px 0 0;
+  font-weight: 700;
+  color: #4ecdc4;
+}
+
+.no-data {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 60px 20px;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  border-radius: 12px;
+  color: #666;
+  font-size: 16px;
+}
+
+.no-data p {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 500;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .expense-charts-container {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+}
+
+@media (max-width: 600px) {
+  .chart-wrapper {
+    padding: 15px;
+  }
+
+  .chart-title {
+    font-size: 16px;
+  }
+
+  .expense-charts-container {
+    padding: 10px;
+    gap: 15px;
+  }
+}

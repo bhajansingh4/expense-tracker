@@ -1,7 +1,12 @@
 import React, { useState } from 'react';
 import apiClient from '../api/axiosConfig';
+import { showSuccess, showError } from '../utils/toast';
 import './AddExpense.css';
 
+/**
+ * AddExpense component - form for adding new expenses
+ * Includes validation, error handling, and success notifications
+ */
 function AddExpense({ categories, onExpenseAdded }) {
   const [formData, setFormData] = useState({
     categoryId: '',
@@ -11,14 +16,15 @@ function AddExpense({ categories, onExpenseAdded }) {
   });
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState('');
 
+  // Handle form field changes
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
       [name]: value,
     }));
+    // Clear error for this field when user starts typing
     if (errors[name]) {
       setErrors((prev) => ({
         ...prev,
@@ -27,6 +33,7 @@ function AddExpense({ categories, onExpenseAdded }) {
     }
   };
 
+  // Validate form data
   const validateForm = () => {
     const newErrors = {};
 
@@ -45,17 +52,18 @@ function AddExpense({ categories, onExpenseAdded }) {
     return newErrors;
   };
 
+  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     const newErrors = validateForm();
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
+      showError('Please fix the errors above');
       return;
     }
 
     setLoading(true);
-    setMessage('');
 
     try {
       const response = await apiClient.post('/expenses', {
@@ -66,7 +74,7 @@ function AddExpense({ categories, onExpenseAdded }) {
       });
 
       if (response.data.success) {
-        setMessage('Expense added successfully!');
+        showSuccess('Expense added successfully! 🎉');
         setFormData({
           categoryId: '',
           amount: '',
@@ -75,12 +83,12 @@ function AddExpense({ categories, onExpenseAdded }) {
         });
         setTimeout(() => {
           onExpenseAdded();
-        }, 1000);
+        }, 500);
       } else {
-        setMessage(response.data.message || 'Error adding expense');
+        showError(response.data.message || 'Error adding expense');
       }
     } catch (error) {
-      setMessage(
+      showError(
         error.response?.data?.message || 'Error adding expense. Please try again.'
       );
     } finally {
@@ -90,35 +98,35 @@ function AddExpense({ categories, onExpenseAdded }) {
 
   return (
     <div className="add-expense-container">
-      <h2>Add New Expense</h2>
-
-      {message && (
-        <div className={`message ${message.includes('success') ? 'success' : 'error'}`}>
-          {message}
-        </div>
-      )}
+      <div className="form-header">
+        <h2>➕ Add New Expense</h2>
+        <p>Track your spending and stay organized</p>
+      </div>
 
       <form onSubmit={handleSubmit} className="expense-form">
+        {/* Date and Category Row */}
         <div className="form-row">
           <div className="form-group">
-            <label htmlFor="date">Date</label>
+            <label htmlFor="date">📅 Date</label>
             <input
               type="date"
               id="date"
               name="date"
               value={formData.date}
               onChange={handleChange}
+              className={errors.date ? 'input-error' : ''}
             />
-            {errors.date && <span className="error-text">{errors.date}</span>}
+            {errors.date && <span className="error-text">❌ {errors.date}</span>}
           </div>
 
           <div className="form-group">
-            <label htmlFor="categoryId">Category</label>
+            <label htmlFor="categoryId">🏷️ Category</label>
             <select
               id="categoryId"
               name="categoryId"
               value={formData.categoryId}
               onChange={handleChange}
+              className={errors.categoryId ? 'input-error' : ''}
             >
               <option value="">Select a category</option>
               {categories.map((category) => (
@@ -127,11 +135,11 @@ function AddExpense({ categories, onExpenseAdded }) {
                 </option>
               ))}
             </select>
-            {errors.categoryId && <span className="error-text">{errors.categoryId}</span>}
+            {errors.categoryId && <span className="error-text">❌ {errors.categoryId}</span>}
           </div>
 
           <div className="form-group">
-            <label htmlFor="amount">Amount ($)</label>
+            <label htmlFor="amount">💰 Amount ($)</label>
             <input
               type="number"
               id="amount"
@@ -141,31 +149,42 @@ function AddExpense({ categories, onExpenseAdded }) {
               placeholder="0.00"
               step="0.01"
               min="0"
+              className={errors.amount ? 'input-error' : ''}
             />
-            {errors.amount && <span className="error-text">{errors.amount}</span>}
+            {errors.amount && <span className="error-text">❌ {errors.amount}</span>}
           </div>
         </div>
 
-        <div className="form-group">
-          <label htmlFor="description">Description (Optional)</label>
+        {/* Description */}
+        <div className="form-group full-width">
+          <label htmlFor="description">📝 Description (Optional)</label>
           <textarea
             id="description"
             name="description"
             value={formData.description}
             onChange={handleChange}
-            placeholder="Add notes about this expense..."
+            placeholder="Add notes about this expense (e.g., 'Groceries from Whole Foods')"
             rows="4"
+            className="expense-textarea"
           />
+          <span className="char-count">{formData.description.length}/500</span>
         </div>
 
-        <button type="submit" className="submit-btn" disabled={loading}>
-          {loading ? 'Adding...' : '➕ Add Expense'}
+        {/* Submit Button */}
+        <button
+          type="submit"
+          className="submit-btn"
+          disabled={loading || categories.length === 0}
+        >
+          {loading ? '⟳ Adding...' : '➕ Add Expense'}
         </button>
       </form>
 
+      {/* Warning if no categories */}
       {categories.length === 0 && (
         <div className="warning-message">
-          ⚠️ Please create categories first before adding expenses.
+          <span className="warning-icon">⚠️</span>
+          <span>Please create categories first before adding expenses.</span>
         </div>
       )}
     </div>
